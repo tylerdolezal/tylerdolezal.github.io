@@ -9,11 +9,11 @@
         body {
             margin: 0;
             font-family: 'Roboto', sans-serif;
-            background-color: #fefae0; /* Cream color */
-            color: #0a1172; /* Navy blue text */
+            background-color: #fdfdf9; /* Cream color */
+            color: #090543; /* Navy blue text */
         }
         nav {
-            background-color: #0a1172; /* Navy bar */
+            background-color: #090543; /* Navy bar */
             display: flex;
             justify-content: center;
             padding: 1em 0;
@@ -22,7 +22,7 @@
             z-index: 100;
         }
         nav a {
-            color: #fefae0; /* Cream text */
+            color: #fdfdf9; /* Cream text */
             text-decoration: none;
             margin: 0 20px;
             font-size: 1.2em;
@@ -30,7 +30,7 @@
             transition: color 0.3s ease;
         }
         nav a:hover {
-            color: #ffc300; /* Bright gold on hover */
+            color: #b7b7b7; /* Silver / grey on hover */
         }
         section {
             padding: 100px 20px;
@@ -38,13 +38,22 @@
             margin: 0 auto;
         }
         h1, h2 {
-            color: #0a1172; /* Keep headings navy */
+            color: #090543; /* Keep headings navy */
         }
         footer {
             text-align: center;
             padding: 20px;
             font-size: 0.9em;
             color: #666;
+        }
+        .blog-post {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-left: 4px solid #090543;
+            margin-bottom: 20px;
+        }
+        .blog-post h3 {
+            margin-top: 0;
         }
     </style>
 </head>
@@ -58,35 +67,56 @@
     </nav>
 
     <section id="home">
+        <img src="profile.JPG" alt="Tyler Dolezal" style="width: 200px; height: auto; border-radius: 50%; margin-bottom: 20px;">
         <h1>Tyler D. Doležal</h1>
         <p>Materials Scientist | USAF Captain | PhD Researcher at MIT</p>
-        <p>Welcome to my personal website. I specialize in computational materials science, high-temperature alloy design, and materials degradation mechanisms.</p>
+        <p>Welcome to my personal website. I am a father to five children, a husband, and a Technical Sciences Officer in the United States Air Force with eight years of active-duty service. My passions are leadership, mentorship, teaching, and research. My personal motto is simple: <em>lead to serve</em> — I am not here to shine, but to lead exceptional men and women in uniform, guiding and educating the next echelon of STEM officers who will dream, build, and field our nation's greatest technological achievements.</p>
+        <p>My technical specialization lies in computational materials science, with a focus on compositionally complex alloy systems and, more recently, the profound impact of light interstitial engineering on material performance.</p>
     </section>
 
     <section id="research">
         <h2>Research</h2>
-        <p>I am passionate about advancing the understanding of high-entropy alloys, light interstitial engineering, and oxidation/corrosion resistance in extreme environments. My research integrates atomistic simulations with experimental validation.</p>
+        <p>I am passionate about advancing the understanding of structural materials, compositionally complex alloy systems, and the role of light interstitial engineering in enhancing their performance. My work seeks to expand the fundamental knowledge of superalloy systems, oxidation and corrosion resistance, and defect behavior in extreme environments.</p>
+    
+        <p>My research philosophy is grounded in bridging the gap between fundamental science and real-world application. I am deeply motivated by the belief that academic findings must not only uncover new mechanisms, but also be scalable and realizable to meet the evolving demands of industrial and defense operations. My work integrates atomistic simulations with experimental validation to ensure that discoveries in materials behavior can translate into tangible, operational improvements for tomorrow’s most challenging environments — from advanced energy systems to next-generation aerospace and warfare applications.</p>
     </section>
 
     <section id="cv">
         <h2>Curriculum Vitae</h2>
-        <p>You can download my full CV here: <a href="YOUR_CV_LINK_HERE" target="_blank" style="color: #0a1172; text-decoration: underline;">Download CV</a>.</p>
-        <!-- Replace YOUR_CV_LINK_HERE with the actual link to your CV PDF you upload to the repo -->
+        <p>You can download my full CV here: <a href="CV.pdf" target="_blank" style="color: #090543; text-decoration: underline;">Download CV</a>.</p>
     </section>
 
     <section id="blog">
-        <h2>Blog Posts</h2>
-        <p>I occasionally post insights about materials science, technology innovation, and navigating academia as an Air Force Officer.</p>
-        <ul>
-            <li><strong>April 2025:</strong> <em>Building Oxidation-Resistant Superalloys with Boron Doping</em></li>
-            <li><strong>March 2025:</strong> <em>Surviving MIT: Lessons from an Officer</em></li>
-            <!-- Add more posts as you create them -->
-        </ul>
+        <h2>Blog and Essays</h2>
+        <p>I occasionally share essays and reflections on mentorship, leadership, materials science, and the intersection between academia, industry, and defense applications. These writings aim to connect technical innovation with the human and organizational elements necessary to bring discoveries into real-world impact.</p>
+        
+        <div class="blog-post">
+            <h3><a href="fog_of_innovation.pdf" target="_blank" onclick="trackClick('Fog of Innovation')">The Fog of Innovation</a></h3>
+            <p><strong>Published:</strong> April 2025</p>
+            <p><em>Abstract:</em> This essay explores the growing disconnect between academic research and industrial application, emphasizing the need for stronger pathways to translate fundamental discoveries into operational technologies that address real-world needs.</p>
+        </div>
     </section>
 
     <footer>
-        &copy; 2025 Tyler Dolezal. All rights reserved.
+        &copy; 2025 Tyler Doležal. All rights reserved.
     </footer>
+
+    <script>
+        function trackClick(postTitle) {
+            if (typeof(Storage) !== "undefined") {
+                let currentCount = localStorage.getItem(postTitle);
+                if (currentCount === null) {
+                    currentCount = 0;
+                } else {
+                    currentCount = parseInt(currentCount);
+                }
+                localStorage.setItem(postTitle, currentCount + 1);
+                console.log("Essay '" + postTitle + "' clicked " + (currentCount + 1) + " times.");
+            } else {
+                console.log("Sorry, your browser does not support web storage...");
+            }
+        }
+    </script>
 
 </body>
 </html>
