@@ -3,33 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tyler Dolezal</title>
+    <title>Tyler Doležal</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
             margin: 0;
-            padding: 0;
-            min-height: 100vh;
+            font-family: 'Roboto', sans-serif;
+            background-color: #fefae0; /* Cream color */
+            color: #0a1172; /* Navy blue text */
+        }
+        nav {
+            background-color: #0a1172; /* Navy bar */
             display: flex;
-            flex-direction: column;
-            align-items: center;
             justify-content: center;
-            background-color: #f4f4f4;
+            padding: 1em 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-        h1 {
-            color: #333;
-            margin-bottom: 0.5em;
-        }
-        p {
-            color: #666;
+        nav a {
+            color: #fefae0; /* Cream text */
+            text-decoration: none;
+            margin: 0 20px;
             font-size: 1.2em;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        nav a:hover {
+            color: #ffc300; /* Bright gold on hover */
+        }
+        section {
+            padding: 100px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            color: #0a1172; /* Keep headings navy */
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9em;
+            color: #666;
         }
     </style>
 </head>
 <body>
-    <h1>Tyler D. Doležal</h1>
-    <p>Materials Scientist | USAF Captain | PhD Researcher at MIT</p>
-    <p>Welcome to my personal site!</p>
+
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#research">Research</a>
+        <a href="#cv">CV</a>
+        <a href="#blog">Blog</a>
+    </nav>
+
+    <section id="home">
+        <h1>Tyler D. Doležal</h1>
+        <p>Materials Scientist | USAF Captain | PhD Researcher at MIT</p>
+        <p>Welcome to my personal website. I specialize in computational materials science, high-temperature alloy design, and materials degradation mechanisms.</p>
+    </section>
+
+    <section id="research">
+        <h2>Research</h2>
+        <p>I am passionate about advancing the understanding of high-entropy alloys, light interstitial engineering, and oxidation/corrosion resistance in extreme environments. My research integrates atomistic simulations with experimental validation.</p>
+    </section>
+
+    <section id="cv">
+        <h2>Curriculum Vitae</h2>
+        <p>You can download my full CV here: <a href="YOUR_CV_LINK_HERE" target="_blank" style="color: #0a1172; text-decoration: underline;">Download CV</a>.</p>
+        <!-- Replace YOUR_CV_LINK_HERE with the actual link to your CV PDF you upload to the repo -->
+    </section>
+
+    <section id="blog">
+        <h2>Blog Posts</h2>
+        <p>I occasionally post insights about materials science, technology innovation, and navigating academia as an Air Force Officer.</p>
+        <ul>
+            <li><strong>April 2025:</strong> <em>Building Oxidation-Resistant Superalloys with Boron Doping</em></li>
+            <li><strong>March 2025:</strong> <em>Surviving MIT: Lessons from an Officer</em></li>
+            <!-- Add more posts as you create them -->
+        </ul>
+    </section>
+
+    <footer>
+        &copy; 2025 Tyler Dolezal. All rights reserved.
+    </footer>
+
 </body>
 </html>
