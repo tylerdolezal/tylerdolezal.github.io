@@ -25,8 +25,85 @@ else{const al=leftSol(T),br=rightSol(T);if(C<=al){a=1;ca=C;region='α solid';des
 return{a,b,l,ca,cb,cl,region,description}}
 function drawDiagram(s){const w=740,h=590,x0=76,x1=700,y0=28,y1=520,X=c=>mix(x0,x1,c/100),Y=t=>mix(y1,y0,(t-200)/1400);p.clearRect(0,0,w,h);p.fillStyle='#fff';p.fillRect(0,0,w,h);p.strokeStyle='#e8ebef';p.lineWidth=1;p.font='14px system-ui';p.fillStyle='#526170';for(let c=0;c<=100;c+=10){p.beginPath();p.moveTo(X(c),y0);p.lineTo(X(c),y1);p.stroke();p.textAlign='center';p.fillText(c,X(c),y1+23)}for(let t=200;t<=1600;t+=200){p.beginPath();p.moveTo(x0,Y(t));p.lineTo(x1,Y(t));p.stroke();p.textAlign='right';p.fillText(t,x0-12,Y(t)+5)}p.strokeStyle=ink;p.lineWidth=2;p.beginPath();p.moveTo(x0,y0);p.lineTo(x0,y1);p.lineTo(x1,y1);p.stroke();function curve(fn,lo,hi){p.beginPath();for(let i=0;i<=120;i++){let c=mix(lo,hi,i/120);if(!i)p.moveTo(X(c),Y(fn(c)));else p.lineTo(X(c),Y(fn(c)))}p.stroke()}p.strokeStyle=red;p.lineWidth=3;curve(leftL,0,Ce);curve(rightL,Ce,100);curve(leftS,0,9);curve(rightS,92,100);p.beginPath();p.moveTo(X(9),Y(Te));p.lineTo(X(92),Y(Te));p.stroke();for(let fn of [leftSol,rightSol]){p.beginPath();for(let i=0;i<=100;i++){let t=mix(300,Te,i/100);if(!i)p.moveTo(X(fn(t)),Y(t));else p.lineTo(X(fn(t)),Y(t))}p.stroke()}p.fillStyle=ink;p.font='italic 27px Georgia';p.textAlign='center';[['L',52,1300],['α + L',32,920],['β + L',85,840],['α + β',50,570],['α',4,870],['β',97,850]].forEach(v=>p.fillText(v[0],X(v[1]),Y(v[2])));p.font='bold 18px system-ui';p.fillText('Composition of B (wt%)',390,574);p.save();p.translate(23,278);p.rotate(-Math.PI/2);p.fillText('Temperature (°C)',0,0);p.restore();p.setLineDash([5,5]);p.strokeStyle='#9aa4ae';p.beginPath();p.moveTo(X(C),y0);p.lineTo(X(C),y1);p.stroke();p.setLineDash([]);const vals=[[s.ca,blue],[s.cb,gold],[s.cl,pink]].filter(v=>v[0]!==null);if(vals.length>1){p.strokeStyle='#2563a5';p.lineWidth=2;p.beginPath();p.moveTo(X(Math.min(...vals.map(v=>v[0]))),Y(T));p.lineTo(X(Math.max(...vals.map(v=>v[0]))),Y(T));p.stroke()}vals.forEach(([c,color])=>{p.fillStyle=color;p.beginPath();p.arc(X(c),Y(T),5,0,Math.PI*2);p.fill()});p.fillStyle='#ed9800';p.beginPath();p.arc(X(C),Y(T),9,0,Math.PI*2);p.fill();p.strokeStyle='white';p.lineWidth=2;p.stroke();p.textAlign='left';p.font='bold 15px system-ui';p.fillStyle='#9a6100';p.fillText(`${C.toFixed(1)}% B, ${T}°C`,clamp(X(C)+13,80,550),clamp(Y(T)-12,35,500))}
 function noise(i,j){let v=Math.sin(i*127.1+j*311.7)*43758.5453;return v-Math.floor(v)}
-function drawMicro(s){const cx=220,cy=172,R=150;m.clearRect(0,0,440,360);m.save();m.beginPath();m.arc(cx,cy,R,0,Math.PI*2);m.clip();m.fillStyle=s.a===1?blue:s.b===1?gold:pink;m.fillRect(0,0,440,360);if(s.l>0&&s.l<1){let solid=s.a>0?s.a:s.b,color=s.a>0?blue:gold,n=Math.max(1,Math.round(12*solid));for(let i=0;i<n;i++){let angle=2*Math.PI*noise(i,3),r0=R*.7*Math.sqrt(noise(i,5)),x=cx+Math.cos(angle)*r0,y=cy+Math.sin(angle)*r0,r=Math.sqrt(solid)*R*(.20+.12*noise(i,8));m.fillStyle=color;m.strokeStyle=ink;m.lineWidth=2;m.beginPath();m.arc(x,y,r,0,Math.PI*2);m.fill();m.stroke()}}
-else if(s.a>0&&s.b>0){m.fillStyle=gold;m.fillRect(0,0,440,360);m.save();m.translate(cx,cy);m.rotate(-.38);let period=14/clamp(s.a,.07,.93);for(let x=-500;x<500;x+=period){m.fillStyle=blue;m.fillRect(x,-350,14,700)}m.restore();let n=Math.round(8*clamp(Math.abs(C-Ce)/(C<Ce?Ce:100-Ce),0,1));for(let i=0;i<n;i++){let angle=2*Math.PI*noise(i,3),r0=R*.73*Math.sqrt(noise(i,5)),x=cx+Math.cos(angle)*r0,y=cy+Math.sin(angle)*r0,r=14+25*noise(i,8);m.beginPath();m.arc(x,y,r,0,Math.PI*2);m.fillStyle=C<Ce?blue:gold;m.fill();m.strokeStyle=ink;m.lineWidth=2;m.stroke()}}m.restore();m.beginPath();m.arc(cx,cy,R,0,Math.PI*2);m.strokeStyle=ink;m.lineWidth=5;m.stroke()}
+// Deterministic rejection sampling keeps every crystallite inside the specimen
+// and prevents overlap. The same seed sequence is used on each redraw.
+function packedCircles(count, radius, clearance=3){
+  const out=[],cx=220,cy=172,R=150;
+  for(let i=0;i<count;i++){
+    let placed=false;
+    for(let trial=0;trial<500;trial++){
+      const angle=2*Math.PI*noise(i*997+trial,3);
+      const distance=(R-radius-3)*Math.sqrt(noise(i*997+trial,5));
+      const x=cx+distance*Math.cos(angle),y=cy+distance*Math.sin(angle);
+      if(out.every(q=>Math.hypot(x-q.x,y-q.y)>=radius+q.r+clearance)){
+        out.push({x,y,r:radius});placed=true;break;
+      }
+    }
+    if(!placed)break;
+  }
+  return out;
+}
+function drawDiscs(discs,color){
+  m.fillStyle=color;m.strokeStyle=ink;m.lineWidth=2;
+  for(const q of discs){m.beginPath();m.arc(q.x,q.y,q.r,0,Math.PI*2);m.fill();m.stroke()}
+}
+// Fixed, jittered nucleation sites. Crystallites never change identity/color.
+const nuclei=[];
+for(let row=0;row<5;row++)for(let col=0;col<5;col++){
+  const x=220+(col-2)*61+(noise(row,col+10)-.5)*19;
+  const y=172+(row-2)*59+(noise(row+20,col)-.5)*19;
+  if(Math.hypot(x-220,y-172)<143)nuclei.push([x,y]);
+}
+// Estimate actual covered area (union of circles), avoiding double-counting overlaps.
+const samplePoints=[];
+for(let y=27;y<320;y+=6)for(let x=75;x<365;x+=6)
+  if((x-220)**2+(y-172)**2<150**2)samplePoints.push([x,y]);
+function coverage(radius){
+  let count=0;
+  for(const [x,y] of samplePoints){
+    for(const [nx,ny] of nuclei){
+      if((x-nx)**2+(y-ny)**2<=radius*radius){count++;break}
+    }
+  }
+  return count/samplePoints.length;
+}
+function radiusForFraction(f){
+  if(f<=0)return 0;
+  if(f>=.9999)return 330;
+  let lo=0,hi=330;
+  for(let i=0;i<14;i++){
+    const mid=(lo+hi)/2;
+    if(coverage(mid)<f)lo=mid;else hi=mid;
+  }
+  return (lo+hi)/2;
+}
+function drawMicro(s){
+  const cx=220,cy=172,R=150;
+  m.clearRect(0,0,440,360);
+  m.save();m.beginPath();m.arc(cx,cy,R,0,Math.PI*2);m.clip();
+  if(s.l===1){m.fillStyle=pink;m.fillRect(0,0,440,360)}
+  else if(s.a===1||s.b===1){m.fillStyle=s.a===1?blue:gold;m.fillRect(0,0,440,360)}
+  else if(s.l>0){
+    const solid=s.a>0?s.a:s.b,solidColor=s.a>0?blue:gold;
+    m.fillStyle=pink;m.fillRect(0,0,440,360);
+    const r=radiusForFraction(solid);
+    m.fillStyle=solidColor;
+    // Overlap is intentional: intersecting discs represent impingement.
+    // Draw without internal black outlines so the solid remains continuous.
+    for(const [x,y] of nuclei){m.beginPath();m.arc(x,y,r,0,Math.PI*2);m.fill()}
+  }else if(s.a>0&&s.b>0){
+    m.fillStyle=gold;m.fillRect(0,0,440,360);
+    m.save();m.translate(cx,cy);m.rotate(-.38);
+    const period=14/clamp(s.a,.07,.93);
+    for(let x=-500;x<500;x+=period){m.fillStyle=blue;m.fillRect(x,-350,14,700)}
+    m.restore();
+    const primaryShare=clamp(Math.abs(C-Ce)/(C<Ce?Ce:100-Ce),0,1);
+    const n=Math.round(9*primaryShare);
+    if(n){const radius=15+10*primaryShare;drawDiscs(packedCircles(n,radius),C<Ce?blue:gold)}
+  }
+  m.restore();m.beginPath();m.arc(cx,cy,R,0,Math.PI*2);
+  m.strokeStyle=ink;m.lineWidth=5;m.stroke();
+}
 function update(){const s=equilibrium();drawDiagram(s);drawMicro(s);el('composition').value=C;el('temperature').value=T;el('cval').textContent=C.toFixed(1)+' wt% B';el('tval').textContent=T+'°C';el('region').textContent=s.region;el('description').textContent=s.description;for(let [key,v] of [['ca',s.ca],['cb',s.cb],['cl',s.cl]])el(key).textContent=v===null?'Not present':v.toFixed(2)+' wt% B';for(let [key,v] of [['fa',s.a],['fb',s.b],['fl',s.l]])el(key).textContent=(100*v).toFixed(1)+'%';el('abar').style.width=(100*s.a)+'%';el('bbar').style.width=(100*s.b)+'%';el('lbar').style.width=(100*s.l)+'%';let terms=[];for(let [f,c] of [[s.a,s.ca],[s.b,s.cb],[s.l,s.cl]])if(f>0)terms.push(`${f.toFixed(3)} × ${c.toFixed(2)}`);el('balance').textContent=`${C.toFixed(2)} = ${terms.join(' + ')}`;let check=s.a*(s.ca??0)+s.b*(s.cb??0)+s.l*(s.cl??0);el('check').textContent=`Reconstructed composition: ${check.toFixed(4)} wt% B · Error: ${Math.abs(check-C).toFixed(6)} wt% B`}
 el('composition').addEventListener('input',e=>{C=+e.target.value;update()});el('temperature').addEventListener('input',e=>{T=+e.target.value;update()});el('reset').addEventListener('click',()=>{C=40;T=900;update()});let dragging=false;const canvas=el('diagram');function move(e){const r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*740/r.width,y=(e.clientY-r.top)*590/r.height;C=Math.round(clamp((x-76)/624*100,0,100)*5)/5;T=Math.round(clamp(200+(520-y)/492*1400,300,1600));update()}canvas.addEventListener('pointerdown',e=>{dragging=true;canvas.setPointerCapture(e.pointerId);move(e)});canvas.addEventListener('pointermove',e=>{if(dragging)move(e)});canvas.addEventListener('pointerup',()=>dragging=false);canvas.addEventListener('pointercancel',()=>dragging=false);update();
 </script></body></html>
