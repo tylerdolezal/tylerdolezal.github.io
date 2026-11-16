@@ -21,7 +21,7 @@ else if(C<9&&T<=sol){a=1;ca=C;region='α solid';description='Single A-rich solid
 else if(C>92&&T<=sol){b=1;cb=C;region='β solid';description='Single B-rich solid solution.'}
 else if(C<Ce){ca=invert(leftS,T,0,9,false);cl=invert(leftL,T,0,Ce,false);a=clamp((cl-C)/(cl-ca),0,1);l=1-a;region='α + Liquid';description='Primary α grows in liquid. Remaining liquid becomes B-rich.'}
 else{cb=invert(rightS,T,92,100,false);cl=invert(rightL,T,Ce,100,true);b=clamp((C-cl)/(cb-cl),0,1);l=1-b;region='β + Liquid';description='Primary β grows in liquid. Remaining liquid becomes A-rich.'}}
-else{const al=leftSol(T),br=rightSol(T);if(C<=al){a=1;ca=C;region='α solid';description='Single A-rich solid solution.'}else if(C>=br){b=1;cb=C;region='β solid';description='Single B-rich solid solution.'}else{ca=al;cb=br;a=(cb-C)/(cb-ca);b=1-a;region='α + β';description='Two solid phases. Primary grains and eutectic lamellae may coexist.'}}
+else{const al=leftSol(T),br=rightSol(T);if(C<=al){a=1;ca=C;region='α solid';description='Single A-rich solid solution.'}else if(C>=br){b=1;cb=C;region='β solid';description='Single B-rich solid solution.'}else{ca=al;cb=br;a=(cb-C)/(cb-ca);b=1-a;region='α + β';description=C<9?'Primary α matrix with secondary β precipitates. No eutectic reaction occurred.':C>92?'Primary β matrix with secondary α precipitates. No eutectic reaction occurred.':'Primary solid grains and eutectic α + β constituent coexist (schematic equilibrium morphology).'}}
 return{a,b,l,ca,cb,cl,region,description}}
 function drawDiagram(s){const w=740,h=590,x0=76,x1=700,y0=28,y1=520,X=c=>mix(x0,x1,c/100),Y=t=>mix(y1,y0,(t-200)/1400);p.clearRect(0,0,w,h);p.fillStyle='#fff';p.fillRect(0,0,w,h);p.strokeStyle='#e8ebef';p.lineWidth=1;p.font='14px system-ui';p.fillStyle='#526170';for(let c=0;c<=100;c+=10){p.beginPath();p.moveTo(X(c),y0);p.lineTo(X(c),y1);p.stroke();p.textAlign='center';p.fillText(c,X(c),y1+23)}for(let t=200;t<=1600;t+=200){p.beginPath();p.moveTo(x0,Y(t));p.lineTo(x1,Y(t));p.stroke();p.textAlign='right';p.fillText(t,x0-12,Y(t)+5)}p.strokeStyle=ink;p.lineWidth=2;p.beginPath();p.moveTo(x0,y0);p.lineTo(x0,y1);p.lineTo(x1,y1);p.stroke();function curve(fn,lo,hi){p.beginPath();for(let i=0;i<=120;i++){let c=mix(lo,hi,i/120);if(!i)p.moveTo(X(c),Y(fn(c)));else p.lineTo(X(c),Y(fn(c)))}p.stroke()}p.strokeStyle=red;p.lineWidth=3;curve(leftL,0,Ce);curve(rightL,Ce,100);curve(leftS,0,9);curve(rightS,92,100);p.beginPath();p.moveTo(X(9),Y(Te));p.lineTo(X(92),Y(Te));p.stroke();for(let fn of [leftSol,rightSol]){p.beginPath();for(let i=0;i<=100;i++){let t=mix(300,Te,i/100);if(!i)p.moveTo(X(fn(t)),Y(t));else p.lineTo(X(fn(t)),Y(t))}p.stroke()}p.fillStyle=ink;p.font='italic 27px Georgia';p.textAlign='center';[['L',52,1300],['α + L',32,920],['β + L',85,840],['α + β',50,570],['α',4,870],['β',97,850]].forEach(v=>p.fillText(v[0],X(v[1]),Y(v[2])));p.font='bold 18px system-ui';p.fillText('Composition of B (wt%)',390,574);p.save();p.translate(23,278);p.rotate(-Math.PI/2);p.fillText('Temperature (°C)',0,0);p.restore();p.setLineDash([5,5]);p.strokeStyle='#9aa4ae';p.beginPath();p.moveTo(X(C),y0);p.lineTo(X(C),y1);p.stroke();p.setLineDash([]);const vals=[[s.ca,blue],[s.cb,gold],[s.cl,pink]].filter(v=>v[0]!==null);if(vals.length>1){p.strokeStyle='#2563a5';p.lineWidth=2;p.beginPath();p.moveTo(X(Math.min(...vals.map(v=>v[0]))),Y(T));p.lineTo(X(Math.max(...vals.map(v=>v[0]))),Y(T));p.stroke()}vals.forEach(([c,color])=>{p.fillStyle=color;p.beginPath();p.arc(X(c),Y(T),5,0,Math.PI*2);p.fill()});p.fillStyle='#ed9800';p.beginPath();p.arc(X(C),Y(T),9,0,Math.PI*2);p.fill();p.strokeStyle='white';p.lineWidth=2;p.stroke();p.textAlign='left';p.font='bold 15px system-ui';p.fillStyle='#9a6100';p.fillText(`${C.toFixed(1)}% B, ${T}°C`,clamp(X(C)+13,80,550),clamp(Y(T)-12,35,500))}
 function noise(i,j){let v=Math.sin(i*127.1+j*311.7)*43758.5453;return v-Math.floor(v)}
@@ -77,6 +77,22 @@ function radiusForFraction(f){
   }
   return (lo+hi)/2;
 }
+// Secondary precipitates in compositions that solidify entirely as one phase.
+// Their displayed area fraction approximates the minority phase mass fraction
+// (equal-density visualization only). Stable jittered positions avoid flicker.
+function drawPrecipitates(minorityFraction, matrixColor, precipitateColor){
+  m.fillStyle=matrixColor;m.fillRect(0,0,440,360);
+  if(minorityFraction<=0)return;
+  const sites=[];
+  for(let row=0;row<10;row++)for(let col=0;col<10;col++){
+    const x=220+(col-4.5)*28+(noise(row+41,col+23)-.5)*10;
+    const y=172+(row-4.5)*28+(noise(row+31,col+53)-.5)*10;
+    if(Math.hypot(x-220,y-172)<138)sites.push([x,y]);
+  }
+  const r=Math.sqrt(minorityFraction*150*150/sites.length)*.98;
+  m.fillStyle=precipitateColor;
+  for(const [x,y] of sites){m.beginPath();m.arc(x,y,r,0,Math.PI*2);m.fill()}
+}
 function drawMicro(s){
   const cx=220,cy=172,R=150;
   m.clearRect(0,0,440,360);
@@ -91,6 +107,8 @@ function drawMicro(s){
     // Overlap is intentional: intersecting discs represent impingement.
     // Draw without internal black outlines so the solid remains continuous.
     for(const [x,y] of nuclei){m.beginPath();m.arc(x,y,r,0,Math.PI*2);m.fill()}
+  }else if(s.a>0&&s.b>0&&(C<9||C>92)){
+    drawPrecipitates(C<9?s.b:s.a,C<9?blue:gold,C<9?gold:blue);
   }else if(s.a>0&&s.b>0){
     m.fillStyle=gold;m.fillRect(0,0,440,360);
     m.save();m.translate(cx,cy);m.rotate(-.38);
