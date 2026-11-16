@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MATL 685 | A–B Eutectic Explorer</title><style>
 :root{font-family:system-ui,Arial,sans-serif;color:#24313e;background:#f6f8fb}*{box-sizing:border-box}body{max-width:1250px;margin:25px auto;padding:0 16px}h1{margin-bottom:4px}.muted{color:#637384}main{display:grid;grid-template-columns:1.5fr 1fr;gap:16px}.panel{background:white;border:1px solid #dbe1e8;border-radius:12px;padding:16px}canvas{width:100%;height:auto;display:block;touch-action:none}.controls{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px}input{width:100%;accent-color:#d58c00}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}.stat{background:#f1f4f7;padding:10px;border-radius:8px}.stat small{display:block;color:#637384}.stat strong{display:block;margin-top:4px}.bar{display:flex;height:18px;border-radius:5px;overflow:hidden;background:#eee}.math{font-family:Georgia,serif;font-size:20px;text-align:center;overflow-wrap:anywhere}button{padding:8px 14px;background:white;border:1px solid #bcc6d0;border-radius:8px;cursor:pointer}@media(max-width:760px){main,.controls{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
-</style></head><body><h1>A–B Eutectic Explorer</h1><p class="muted">MATL 685 · Drag the orange marker, or adjust the composition and temperature sliders. Equilibrium mass fractions, not volume fractions.</p><main><section class="panel"><h3>Binary phase diagram</h3><canvas id="diagram" width="740" height="590"></canvas></section><section class="panel"><h3>Illustrative microstructure</h3><canvas id="micro" width="440" height="360"></canvas><h3 id="region" style="text-align:center"></h3><p id="description" class="muted" style="min-height:54px;text-align:center"></p><div class="bar"><div id="abar" style="background:#147cb8"></div><div id="bbar" style="background:#efa525"></div><div id="lbar" style="background:#f58e9c"></div></div><p class="muted" style="font-size:13px">Blue: α solid · Gold: β solid · Pink: liquid</p></section></main><section class="panel controls"><label>Overall composition: <b id="cval"></b><input id="composition" type="range" min="0" max="100" step="0.2" value="40"></label><label>Temperature: <b id="tval"></b><input id="temperature" type="range" min="300" max="1600" step="1" value="900"></label></section><section class="stats"><div class="stat"><small>α composition</small><strong id="ca"></strong></div><div class="stat"><small>β composition</small><strong id="cb"></strong></div><div class="stat"><small>Liquid composition</small><strong id="cl"></strong></div><div class="stat"><small>α mass fraction</small><strong id="fa"></strong></div><div class="stat"><small>β mass fraction</small><strong id="fb"></strong></div><div class="stat"><small>Liquid mass fraction</small><strong id="fl"></strong></div></section><section class="panel" style="margin-top:16px"><h3>Mass balance / lever rule</h3><div class="math" id="balance"></div><p id="check" class="muted" style="text-align:center"></p><button id="reset">Reset</button></section><p class="muted">Teaching approximation based on the supplied Cu–Ag schematic, relabeled A–B. Eutectic: ~780°C, 71 wt% B. The exact invariant temperature is shown using the below-eutectic limit; kinetic effects and spatial diffusion are not modeled. Do not use as assessed experimental thermodynamic data.</p>
+</style></head><body><h1>A–B Eutectic Explorer</h1><p class="muted">MATL 685 · Drag the orange marker, or adjust the composition and temperature sliders. Equilibrium mass fractions, not volume fractions.</p><main><section class="panel"><h3>Binary phase diagram</h3><canvas id="diagram" width="740" height="590"></canvas></section><section class="panel"><h3>Polycrystalline microstructure (schematic)</h3><canvas id="micro" width="440" height="360"></canvas><h3 id="region" style="text-align:center"></h3><p id="description" class="muted" style="min-height:54px;text-align:center"></p><div class="bar"><div id="abar" style="background:#147cb8"></div><div id="bbar" style="background:#efa525"></div><div id="lbar" style="background:#f58e9c"></div></div><p class="muted" style="font-size:13px">Blue: α solid · Gold: β solid · Pink: liquid</p></section></main><section class="panel controls"><label>Overall composition: <b id="cval"></b><input id="composition" type="range" min="0" max="100" step="0.2" value="40"></label><label>Temperature: <b id="tval"></b><input id="temperature" type="range" min="300" max="1600" step="1" value="900"></label></section><section class="stats"><div class="stat"><small>α composition</small><strong id="ca"></strong></div><div class="stat"><small>β composition</small><strong id="cb"></strong></div><div class="stat"><small>Liquid composition</small><strong id="cl"></strong></div><div class="stat"><small>α mass fraction</small><strong id="fa"></strong></div><div class="stat"><small>β mass fraction</small><strong id="fb"></strong></div><div class="stat"><small>Liquid mass fraction</small><strong id="fl"></strong></div></section><section class="panel" style="margin-top:16px"><h3>Mass balance / lever rule</h3><div class="math" id="balance"></div><p id="check" class="muted" style="text-align:center"></p><button id="reset">Reset</button></section><p class="muted">Teaching approximation based on the supplied Cu–Ag schematic, relabeled A–B. Eutectic stripe widths adjust with equilibrium phase fractions, while the primary crystallites retain their pre-eutectic footprint (equal-density schematic). Eutectic: ~780°C, 71 wt% B. The exact invariant temperature is shown using the below-eutectic limit; kinetic effects and spatial diffusion are not modeled. Do not use as assessed experimental thermodynamic data.</p>
 <script>
 'use strict';
 const el=id=>document.getElementById(id), p=el('diagram').getContext('2d'),m=el('micro').getContext('2d');
@@ -20,7 +20,7 @@ if(T>=liq){l=1;cl=C;region='Liquid';description='A homogeneous liquid solution.'
 else if(C<9&&T<=sol){a=1;ca=C;region='α solid';description='Single A-rich solid solution.'}
 else if(C>92&&T<=sol){b=1;cb=C;region='β solid';description='Single B-rich solid solution.'}
 else if(C<Ce){ca=invert(leftS,T,0,9,false);cl=invert(leftL,T,0,Ce,false);a=clamp((cl-C)/(cl-ca),0,1);l=1-a;region='α + Liquid';description='Primary α grows in liquid. Remaining liquid becomes B-rich.'}
-else{cb=invert(rightS,T,92,100,false);cl=invert(rightL,T,Ce,100,true);b=clamp((C-cl)/(cb-cl),0,1);l=1-b;region='β + Liquid';description='Primary β grows in liquid. Remaining liquid becomes A-rich.'}}
+else{cb=invert(rightS,T,92,100,true);cl=invert(rightL,T,Ce,100,true);b=clamp((C-cl)/(cb-cl),0,1);l=1-b;region='β + Liquid';description='Primary β grows in liquid. Remaining liquid becomes A-rich.'}}
 else{const al=leftSol(T),br=rightSol(T);if(C<=al){a=1;ca=C;region='α solid';description='Single A-rich solid solution.'}else if(C>=br){b=1;cb=C;region='β solid';description='Single B-rich solid solution.'}else{ca=al;cb=br;a=(cb-C)/(cb-ca);b=1-a;region='α + β';description=C<9?'Primary α matrix with secondary β precipitates. No eutectic reaction occurred.':C>92?'Primary β matrix with secondary α precipitates. No eutectic reaction occurred.':'Primary solid grains and eutectic α + β constituent coexist (schematic equilibrium morphology).'}}
 return{a,b,l,ca,cb,cl,region,description}}
 function drawDiagram(s){const w=740,h=590,x0=76,x1=700,y0=28,y1=520,X=c=>mix(x0,x1,c/100),Y=t=>mix(y1,y0,(t-200)/1400);p.clearRect(0,0,w,h);p.fillStyle='#fff';p.fillRect(0,0,w,h);p.strokeStyle='#e8ebef';p.lineWidth=1;p.font='14px system-ui';p.fillStyle='#526170';for(let c=0;c<=100;c+=10){p.beginPath();p.moveTo(X(c),y0);p.lineTo(X(c),y1);p.stroke();p.textAlign='center';p.fillText(c,X(c),y1+23)}for(let t=200;t<=1600;t+=200){p.beginPath();p.moveTo(x0,Y(t));p.lineTo(x1,Y(t));p.stroke();p.textAlign='right';p.fillText(t,x0-12,Y(t)+5)}p.strokeStyle=ink;p.lineWidth=2;p.beginPath();p.moveTo(x0,y0);p.lineTo(x0,y1);p.lineTo(x1,y1);p.stroke();function curve(fn,lo,hi){p.beginPath();for(let i=0;i<=120;i++){let c=mix(lo,hi,i/120);if(!i)p.moveTo(X(c),Y(fn(c)));else p.lineTo(X(c),Y(fn(c)))}p.stroke()}p.strokeStyle=red;p.lineWidth=3;curve(leftL,0,Ce);curve(rightL,Ce,100);curve(leftS,0,9);curve(rightS,92,100);p.beginPath();p.moveTo(X(9),Y(Te));p.lineTo(X(92),Y(Te));p.stroke();for(let fn of [leftSol,rightSol]){p.beginPath();for(let i=0;i<=100;i++){let t=mix(300,Te,i/100);if(!i)p.moveTo(X(fn(t)),Y(t));else p.lineTo(X(fn(t)),Y(t))}p.stroke()}p.fillStyle=ink;p.font='italic 27px Georgia';p.textAlign='center';[['L',52,1300],['α + L',32,920],['β + L',85,840],['α + β',50,570],['α',4,870],['β',97,850]].forEach(v=>p.fillText(v[0],X(v[1]),Y(v[2])));p.font='bold 18px system-ui';p.fillText('Composition of B (wt%)',390,574);p.save();p.translate(23,278);p.rotate(-Math.PI/2);p.fillText('Temperature (°C)',0,0);p.restore();p.setLineDash([5,5]);p.strokeStyle='#9aa4ae';p.beginPath();p.moveTo(X(C),y0);p.lineTo(X(C),y1);p.stroke();p.setLineDash([]);const vals=[[s.ca,blue],[s.cb,gold],[s.cl,pink]].filter(v=>v[0]!==null);if(vals.length>1){p.strokeStyle='#2563a5';p.lineWidth=2;p.beginPath();p.moveTo(X(Math.min(...vals.map(v=>v[0]))),Y(T));p.lineTo(X(Math.max(...vals.map(v=>v[0]))),Y(T));p.stroke()}vals.forEach(([c,color])=>{p.fillStyle=color;p.beginPath();p.arc(X(c),Y(T),5,0,Math.PI*2);p.fill()});p.fillStyle='#ed9800';p.beginPath();p.arc(X(C),Y(T),9,0,Math.PI*2);p.fill();p.strokeStyle='white';p.lineWidth=2;p.stroke();p.textAlign='left';p.font='bold 15px system-ui';p.fillStyle='#9a6100';p.fillText(`${C.toFixed(1)}% B, ${T}°C`,clamp(X(C)+13,80,550),clamp(Y(T)-12,35,500))}
@@ -93,12 +93,42 @@ function drawPrecipitates(minorityFraction, matrixColor, precipitateColor){
   m.fillStyle=precipitateColor;
   for(const [x,y] of sites){m.beginPath();m.arc(x,y,r,0,Math.PI*2);m.fill()}
 }
+
+// Grain boundaries are orientation boundaries between neighboring grains of
+// the SAME phase. They are separate from the primary/eutectic silhouette.
+// A fixed Voronoi tessellation makes the polycrystal stable as T and C change.
+const grainLayer=document.createElement('canvas');
+grainLayer.width=440;grainLayer.height=360;
+const grainCtx=grainLayer.getContext('2d');
+function drawGrainBoundaries(radius=Infinity){
+  grainCtx.clearRect(0,0,440,360);
+  const im=grainCtx.createImageData(440,360),data=im.data;
+  const sites=nuclei;
+  for(let y=22;y<323;y++)for(let x=70;x<371;x++){
+    if((x-220)**2+(y-172)**2>150**2)continue;
+    let best=Infinity,second=Infinity;
+    for(const [nx,ny] of sites){
+      const d=(x-nx)**2+(y-ny)**2;
+      if(d<best){second=best;best=d}
+      else if(d<second)second=d;
+    }
+    if(best>radius*radius)continue;
+    // The two closest nuclei compete at a grain boundary.
+    if(Math.sqrt(second)-Math.sqrt(best)<1.8){
+      const k=(y*440+x)*4;
+      data[k]=22;data[k+1]=33;data[k+2]=44;data[k+3]=190;
+    }
+  }
+  grainCtx.putImageData(im,0,0);
+  m.drawImage(grainLayer,0,0);
+}
+
 function drawMicro(s){
   const cx=220,cy=172,R=150;
   m.clearRect(0,0,440,360);
   m.save();m.beginPath();m.arc(cx,cy,R,0,Math.PI*2);m.clip();
   if(s.l===1){m.fillStyle=pink;m.fillRect(0,0,440,360)}
-  else if(s.a===1||s.b===1){m.fillStyle=s.a===1?blue:gold;m.fillRect(0,0,440,360)}
+  else if(s.a===1||s.b===1){m.fillStyle=s.a===1?blue:gold;m.fillRect(0,0,440,360);drawGrainBoundaries()}
   else if(s.l>0){
     const solid=s.a>0?s.a:s.b,solidColor=s.a>0?blue:gold;
     m.fillStyle=pink;m.fillRect(0,0,440,360);
@@ -107,17 +137,75 @@ function drawMicro(s){
     // Overlap is intentional: intersecting discs represent impingement.
     // Draw without internal black outlines so the solid remains continuous.
     for(const [x,y] of nuclei){m.beginPath();m.arc(x,y,r,0,Math.PI*2);m.fill()}
+    drawGrainBoundaries(r);
   }else if(s.a>0&&s.b>0&&(C<9||C>92)){
     drawPrecipitates(C<9?s.b:s.a,C<9?blue:gold,C<9?gold:blue);
+    drawGrainBoundaries();
   }else if(s.a>0&&s.b>0){
+    // Freeze the primary-solid geometry at the instant before the eutectic reaction.
+    // The remaining liquid pockets transform to lamellar alpha+beta below Te.
+    // These are microconstituent fractions at Te, not current alpha/beta phase fractions.
+    const alphaPrimary=C<Ce;
+    const primaryFraction=alphaPrimary
+      ? clamp((Ce-C)/(Ce-9),0,1)
+      : clamp((C-Ce)/(92-Ce),0,1);
+    const primaryColor=alphaPrimary?blue:gold;
+    const r=radiusForFraction(primaryFraction);
+
+    // Teaching visualization: stripe widths track the OVERALL equilibrium
+    // alpha/beta mass fractions, so moving toward A always thickens blue.
+    // This is intentionally not a quantitative eutectic-constituent split:
+    // primary grains are drawn separately on top of the stripes.
+    const eutecticAlpha=clamp(s.a,0,1);
+    const stripePeriod=17;
     m.fillStyle=gold;m.fillRect(0,0,440,360);
     m.save();m.translate(cx,cy);m.rotate(-.38);
-    const period=14/clamp(s.a,.07,.93);
-    for(let x=-500;x<500;x+=period){m.fillStyle=blue;m.fillRect(x,-350,14,700)}
+    for(let x=-550;x<550;x+=stripePeriod){
+      m.fillStyle=blue;
+      m.fillRect(x,-400,stripePeriod*eutecticAlpha,800);
+    }
     m.restore();
-    const primaryShare=clamp(Math.abs(C-Ce)/(C<Ce?Ce:100-Ce),0,1);
-    const n=Math.round(9*primaryShare);
-    if(n){const radius=15+10*primaryShare;drawDiscs(packedCircles(n,radius),C<Ce?blue:gold)}
+
+    // Draw primary crystallites as a single merged silhouette. Only the
+    // outer alpha/eutectic or beta/eutectic phase boundary gets a dark line;
+    // overlapping circles do NOT acquire artificial internal boundaries.
+    if(primaryFraction>0){
+      const mask=document.createElement('canvas');
+      mask.width=440;mask.height=360;
+      const g=mask.getContext('2d');
+      g.fillStyle='#fff';
+      for(const [x,y] of nuclei){
+        g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();
+      }
+      const img=g.getImageData(0,0,440,360);
+      const pixels=img.data;
+      // Put the primary phase on top of the striped eutectic.
+      m.fillStyle=primaryColor;
+      for(const [x,y] of nuclei){
+        m.beginPath();m.arc(x,y,r,0,Math.PI*2);m.fill();
+      }
+      // Outline only the perimeter of the union of circles.
+      // This is a phase boundary, not a grain boundary between same-phase grains.
+      const edge=g.createImageData(440,360),out=edge.data;
+      const w=440,h=360,thickness=2;
+      for(let y=thickness;y<h-thickness;y++){
+        for(let x=thickness;x<w-thickness;x++){
+          const idx=(y*w+x)*4;
+          if(pixels[idx+3]<128)continue;
+          let boundary=false;
+          for(const [dx,dy] of [[-thickness,0],[thickness,0],[0,-thickness],[0,thickness]]){
+            if(pixels[((y+dy)*w+x+dx)*4+3]<128){boundary=true;break;}
+          }
+          if(boundary){out[idx]=24;out[idx+1]=35;out[idx+2]=45;out[idx+3]=255;}
+        }
+      }
+      // putImageData ignores clipping, so apply the edge through a clipped drawImage.
+      const edgeCanvas=document.createElement('canvas');
+      edgeCanvas.width=w;edgeCanvas.height=h;
+      edgeCanvas.getContext('2d').putImageData(edge,0,0);
+      m.drawImage(edgeCanvas,0,0);
+      drawGrainBoundaries(r);
+    }
   }
   m.restore();m.beginPath();m.arc(cx,cy,R,0,Math.PI*2);
   m.strokeStyle=ink;m.lineWidth=5;m.stroke();
